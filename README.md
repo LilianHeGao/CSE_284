@@ -59,14 +59,14 @@ bash scripts/04_simulate_pheno_gcta.sh config/project.env
 - Top-hit overlap and effect/p-value concordance tables
 - Runtime comparison table
 
-## Remaining work (for peer review discussion)
+## Remaining work
 1. Finalize exact accession subset and phenotype file harmonization.
 2. Run full chr4 benchmark and collect first-pass plots/tables.
 3. Tune variant QC thresholds (MAF/missingness) and assess sensitivity.
 4. Validate simulation settings (heritability, number of causal SNPs, effect-size distribution).
 5. Decide whether to include a second trait/chromosome for robustness.
 
-## Challenges to discuss with peers
+## Challenges
 - Best practice for choosing number of PCs in LR+PC baseline.
 - Fair runtime comparison settings between PLINK2 and GEMMA.
 - Recommended simulation design for realistic LD-aware causal architectures.
