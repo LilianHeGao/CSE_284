@@ -6,23 +6,24 @@ source "$CFG"
 
 mkdir -p "$RAW_DIR" "$PROC_DIR" "$RESULTS_DIR"
 
-echo "[1/3] Subsetting chromosome ${CHR} from VCF"
-"$BCFTOOLS" view -r "$CHR" -Oz -o "$RAW_DIR/chr${CHR}.vcf.gz" "$VCF_GZ"
-"$BCFTOOLS" index -f "$RAW_DIR/chr${CHR}.vcf.gz"
+tail -n +2 $PROC_DIR/pheno.txt > "$PROC_DIR/pheno.keep_ids.txt"
 
-echo "[2/3] Converting VCF to PLINK2 pfile"
+"$BCFTOOLS" view -v snps -m2 -M2 "$VCF_GZ" -Oz -o "$RAW_DIR/1001G.Chr4_clean.vcf.gz"
+
+# convert VCF to pfile and filerinbg accession to only those with phenotypes
 "$PLINK2" \
-  --vcf "$RAW_DIR/chr${CHR}.vcf.gz" \
+  --vcf "$VCF_GZ" \
+  --keep "$PROC_DIR/pheno.keep_ids.txt" \
+  --chr-set 5 \
+  --allow-extra-chr \
   --set-all-var-ids @:#:\$r:\$a \
   --make-pgen \
   --out "$PROC_DIR/chr${CHR}"
 
-echo "[3/3] Applying basic QC and exporting bed/bim/fam"
+# QC
 "$PLINK2" \
   --pfile "$PROC_DIR/chr${CHR}" \
   --maf "$MAF" \
   --geno "$GENO_MISSING" \
   --make-bed \
   --out "$PROC_DIR/chr${CHR}.qc"
-
-echo "Done: $PROC_DIR/chr${CHR}.qc.{bed,bim,fam}"

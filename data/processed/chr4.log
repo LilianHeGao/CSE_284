@@ -1,0 +1,21 @@
+PLINK v2.0.0-a.6.33 M1 (28 Feb 2026)
+Options in effect:
+  --allow-extra-chr
+  --chr-set 5
+  --keep data/processed/pheno.keep_ids.txt
+  --make-pgen
+  --out data/processed/chr4
+  --set-all-var-ids @:#:$r:$a
+  --vcf ./data/raw/1001G.Chr4.vcf.gz
+
+Hostname: 01-5844
+Working directory: /Users/nkang/Desktop/BISB program/26WI/CSE284/CSE_284
+Start time: Mon Mar  9 14:05:28 2026
+
+Random number seed: 1773090328
+32768 MiB RAM detected; reserving 16384 MiB for main workspace.
+Using up to 10 threads (change this with --threads).
+--vcf: 122359 variants scanned.
+Error: Line 122378 of --vcf file has fewer tokens than expected.
+
+End time: Mon Mar  9 14:05:31 2026
