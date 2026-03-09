@@ -1,0 +1,1 @@
+Phenotype CSV was downloaded from AraPheno website (https://arapheno.1001genomes.org/phenotype/262/)
