@@ -47,6 +47,16 @@ python scripts/05_evaluate.py \
 bash scripts/04_simulate_pheno_gcta.sh config/project.env
 ```
 
+## Windows cmd.exe
+If you are running from a Windows `cmd.exe` or Conda prompt, use the Python runner instead of `bash`:
+```bat
+python scripts\run_pipeline.py --config config\project.env check-tools
+python scripts\run_pipeline.py --config config\project.env prepare-data
+python scripts\run_pipeline.py --config config\project.env run-lr
+python scripts\run_pipeline.py --config config\project.env run-lmm
+python scripts\run_pipeline.py --config config\project.env evaluate
+```
+
 ## Results so far
 - Pipeline scaffold and reproducible scripts are now in place.
 - Methods and toolchain are fully specified (no longer vague).
