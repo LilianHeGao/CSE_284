@@ -33,11 +33,9 @@ echo "[2/3] Normalizing VCF input"
 VCF_FOR_PLINK="$CLEAN_VCF_GZ"
 if command -v "$BCFTOOLS" >/dev/null 2>&1; then
   "$BCFTOOLS" view -v snps -m2 -M2 "$VCF_GZ" -Oz -o "$CLEAN_VCF_GZ"
-elif [[ -f "$CLEAN_VCF_GZ" ]]; then
-  echo "bcftools not found; reusing existing cleaned VCF: $CLEAN_VCF_GZ"
 else
-  echo "bcftools not found; using raw VCF directly."
-  VCF_FOR_PLINK="$VCF_GZ"
+  echo "bcftools not found; sanitizing VCF with Python fallback."
+  python scripts/sanitize_vcf.py --in-vcf "$VCF_GZ" --out-vcf "$CLEAN_VCF_GZ"
 fi
 
 echo "[3/3] Converting VCF to PLINK and applying QC"

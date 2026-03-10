@@ -279,11 +279,18 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
                 ctx["CLEAN_VCF_GZ"],
             ]
         )
-    elif repo_path(ctx["CLEAN_VCF_GZ"]).exists():
-        print(f"Using existing cleaned VCF: {ctx['CLEAN_VCF_GZ']}")
     else:
-        vcf_for_plink = ctx["VCF_GZ"]
-        print("bcftools not found; using VCF_GZ directly for PLINK import.")
+        print("bcftools not found; sanitizing VCF with Python fallback.")
+        run_command(
+            [
+                sys.executable,
+                "scripts/sanitize_vcf.py",
+                "--in-vcf",
+                ctx["VCF_GZ"],
+                "--out-vcf",
+                ctx["CLEAN_VCF_GZ"],
+            ]
+        )
 
     run_command(
         [
