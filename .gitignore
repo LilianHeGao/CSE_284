@@ -18,3 +18,8 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# Local machine-specific overrides and Windows binaries
+/config/project.env.local
+/plink2.exe
+/vcf_subset.exe

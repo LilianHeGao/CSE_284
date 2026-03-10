@@ -4,9 +4,17 @@ set -euo pipefail
 CFG=${1:-config/project.env}
 source "$CFG"
 
+if [[ -f "${CFG}.local" ]]; then
+  source "${CFG}.local"
+fi
+
 mkdir -p "$RESULTS_DIR/lr" "$RESULTS_DIR/lr_pcs"
 
-BFILE="$PROC_DIR/chr${CHR}.qc"
+RUN_LABEL=${RUN_LABEL:-${SUBSET_NAME:-all}}
+BFILE=${BFILE_PREFIX:-"$PROC_DIR/chr${CHR}.${RUN_LABEL}.qc"}
+LR_PREFIX="$RESULTS_DIR/lr/${RUN_LABEL}_lr"
+PCA_PREFIX="$RESULTS_DIR/lr_pcs/${RUN_LABEL}_pca"
+LR_PCS_PREFIX="$RESULTS_DIR/lr_pcs/${RUN_LABEL}_lr_pcs"
 
 echo "[1/3] Naive LR GWAS (no structure correction)"
 "$PLINK2" \
@@ -14,24 +22,21 @@ echo "[1/3] Naive LR GWAS (no structure correction)"
   --pheno "$PHENO_FILE" \
   --pheno-name "$PHENO_NAME" \
   --glm hide-covar \
-  --out "$RESULTS_DIR/lr/lr"
+  --out "$LR_PREFIX"
 
 echo "[2/3] PCA for LR+PC covariates"
 "$PLINK2" \
   --bfile "$BFILE" \
   --pca "$NUM_PCS" \
-  --out "$RESULTS_DIR/lr_pcs/pca"
-
-awk 'BEGIN{OFS="\t"} NR==1{$1="IID"; print; next} {print $2, $3, $4, $5, $6, $7}' \
-  "$RESULTS_DIR/lr_pcs/pca.eigenvec" > "$RESULTS_DIR/lr_pcs/covars.tsv"
+  --out "$PCA_PREFIX"
 
 echo "[3/3] LR+PC GWAS"
 "$PLINK2" \
   --bfile "$BFILE" \
   --pheno "$PHENO_FILE" \
   --pheno-name "$PHENO_NAME" \
-  --covar "$RESULTS_DIR/lr_pcs/covars.tsv" \
+  --covar "$PCA_PREFIX.eigenvec" \
   --glm hide-covar \
-  --out "$RESULTS_DIR/lr_pcs/lr_pcs"
+  --out "$LR_PCS_PREFIX"
 
 echo "Done: LR and LR+PC results written to $RESULTS_DIR"

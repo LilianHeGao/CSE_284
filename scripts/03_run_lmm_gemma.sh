@@ -4,25 +4,37 @@ set -euo pipefail
 CFG=${1:-config/project.env}
 source "$CFG"
 
+if [[ -f "${CFG}.local" ]]; then
+  source "${CFG}.local"
+fi
+
 mkdir -p "$RESULTS_DIR/lmm"
-BFILE="$PROC_DIR/chr${CHR}.qc"
+
+RUN_LABEL=${RUN_LABEL:-${SUBSET_NAME:-all}}
+BFILE=${BFILE_PREFIX:-"$PROC_DIR/chr${CHR}.${RUN_LABEL}.qc"}
+KINSHIP_PREFIX="${RUN_LABEL}_kinship"
+PCA_PREFIX="$RESULTS_DIR/lmm/${RUN_LABEL}_pca"
+LMM_COVARS="$RESULTS_DIR/lmm/${RUN_LABEL}_lmm_covars.txt"
+LMM_PREFIX="${RUN_LABEL}_lmm"
+KINSHIP_OUT="$RESULTS_DIR/lmm/${KINSHIP_PREFIX}.cXX.txt"
+LMM_OUT="$RESULTS_DIR/lmm/${LMM_PREFIX}.assoc.txt"
 
 echo "[1/3] Building kinship matrix"
-"$GEMMA" -bfile "$BFILE" -gk 1 -o kinship
-mv output/kinship.cXX.txt "$RESULTS_DIR/lmm/kinship.cXX.txt"
+"$GEMMA" -bfile "$BFILE" -gk 1 -o "$KINSHIP_PREFIX"
+mv "output/${KINSHIP_PREFIX}.cXX.txt" "$KINSHIP_OUT"
 
 echo "[2/3] Building PCs for fixed-effect sensitivity (optional for LMM)"
-"$PLINK2" --bfile "$BFILE" --pca "$NUM_PCS" --out "$RESULTS_DIR/lmm/pca"
-awk 'BEGIN{OFS="\t"} {for(i=3;i<=NF;i++) printf "%s%s", $i, (i==NF?"\n":"\t")}' \
-  "$RESULTS_DIR/lmm/pca.eigenvec" > "$RESULTS_DIR/lmm/lmm_covars.txt"
+"$PLINK2" --bfile "$BFILE" --pca "$NUM_PCS" --out "$PCA_PREFIX"
+awk 'NR==1 {next} {for(i=3;i<=NF;i++) printf "%s%s", $i, (i==NF?"\n":"\t")}' \
+  "$PCA_PREFIX.eigenvec" > "$LMM_COVARS"
 
 echo "[3/3] LMM association test"
 "$GEMMA" \
   -bfile "$BFILE" \
-  -k "$RESULTS_DIR/lmm/kinship.cXX.txt" \
+  -k "$KINSHIP_OUT" \
   -lmm 4 \
-  -c "$RESULTS_DIR/lmm/lmm_covars.txt" \
-  -o lmm
-mv output/lmm.assoc.txt "$RESULTS_DIR/lmm/lmm.assoc.txt"
+  -c "$LMM_COVARS" \
+  -o "$LMM_PREFIX"
+mv "output/${LMM_PREFIX}.assoc.txt" "$LMM_OUT"
 
-echo "Done: $RESULTS_DIR/lmm/lmm.assoc.txt"
+echo "Done: $LMM_OUT"
