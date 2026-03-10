@@ -21,7 +21,7 @@ echo "[1/3] Naive LR GWAS (no structure correction)"
   --bfile "$BFILE" \
   --pheno "$PHENO_FILE" \
   --pheno-name "$PHENO_NAME" \
-  --glm hide-covar \
+  --glm hide-covar allow-no-covars \
   --out "$LR_PREFIX"
 
 echo "[2/3] PCA for LR+PC covariates"

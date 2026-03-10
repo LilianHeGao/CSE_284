@@ -30,11 +30,19 @@ python scripts/00_build_subset_inputs.py \
   --out-samples "$PHENO_SAMPLES_FILE"
 
 echo "[2/3] Normalizing VCF input"
-"$BCFTOOLS" view -v snps -m2 -M2 "$VCF_GZ" -Oz -o "$CLEAN_VCF_GZ"
+VCF_FOR_PLINK="$CLEAN_VCF_GZ"
+if command -v "$BCFTOOLS" >/dev/null 2>&1; then
+  "$BCFTOOLS" view -v snps -m2 -M2 "$VCF_GZ" -Oz -o "$CLEAN_VCF_GZ"
+elif [[ -f "$CLEAN_VCF_GZ" ]]; then
+  echo "bcftools not found; reusing existing cleaned VCF: $CLEAN_VCF_GZ"
+else
+  echo "bcftools not found; using raw VCF directly."
+  VCF_FOR_PLINK="$VCF_GZ"
+fi
 
 echo "[3/3] Converting VCF to PLINK and applying QC"
 "$PLINK2" \
-  --vcf "$CLEAN_VCF_GZ" \
+  --vcf "$VCF_FOR_PLINK" \
   --keep "$KEEP_IDS_FILE" \
   --chr-set 5 \
   --allow-extra-chr \

@@ -56,6 +56,7 @@ python scripts\run_pipeline.py --config config\project.env run-lr
 python scripts\run_pipeline.py --config config\project.env run-lmm
 python scripts\run_pipeline.py --config config\project.env evaluate
 ```
+`plink2` and `python` are required. `bcftools` (VCF normalization) and `gemma` (LMM) are optional; if `gemma` is missing, run `evaluate` after `run-lr` to compare LR vs. LR+PCs only.
 
 ## Results so far
 - Pipeline scaffold and reproducible scripts are now in place.

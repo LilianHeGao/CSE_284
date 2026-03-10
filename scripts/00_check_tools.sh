@@ -26,10 +26,24 @@ check_tool() {
   fi
 }
 
-check_tool "$BCFTOOLS" bcftools
 check_tool "$PLINK2" plink2
-check_tool "$GEMMA" gemma
 check_tool python python
+
+if [[ "$BCFTOOLS" == */* ]]; then
+  if [[ ! -x "$BCFTOOLS" ]]; then
+    echo "Optional dependency not found: bcftools ($BCFTOOLS)"
+  fi
+elif ! command -v "$BCFTOOLS" >/dev/null 2>&1; then
+  echo "Optional dependency not found: bcftools"
+fi
+
+if [[ "$GEMMA" == */* ]]; then
+  if [[ ! -x "$GEMMA" ]]; then
+    echo "Optional dependency not found: gemma ($GEMMA)"
+  fi
+elif ! command -v "$GEMMA" >/dev/null 2>&1; then
+  echo "Optional dependency not found: gemma"
+fi
 
 if [[ "$GCTA" == */* ]]; then
   if [[ ! -x "$GCTA" ]]; then

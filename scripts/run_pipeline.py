@@ -89,7 +89,14 @@ def ensure_dir(path_str: str) -> None:
 
 def run_command(args: list[str]) -> None:
     print(">", " ".join(args))
-    subprocess.run(args, cwd=REPO_ROOT, check=True)
+    try:
+        subprocess.run(args, cwd=REPO_ROOT, check=True)
+    except FileNotFoundError as exc:
+        raise SystemExit(
+            f"Command not found: {args[0]}. Set its path in config/project.env.local."
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"Command failed with exit code {exc.returncode}: {' '.join(args)}") from exc
 
 
 def move_output(src_rel: str, dest_rel: str) -> None:
@@ -179,12 +186,14 @@ def context_from_config(cfg: dict[str, str]) -> dict[str, str]:
 
 def cmd_check_tools(ctx: dict[str, str]) -> None:
     required = {
-        "bcftools": ctx["BCFTOOLS"],
         "plink2": ctx["PLINK2"],
-        "gemma": ctx["GEMMA"],
         "python": sys.executable,
     }
-    optional = {"gcta64": ctx["GCTA"]}
+    optional = {
+        "bcftools (VCF normalization)": ctx["BCFTOOLS"],
+        "gemma (LMM step)": ctx["GEMMA"],
+        "gcta64 (simulation step)": ctx["GCTA"],
+    }
 
     missing = [label for label, tool in required.items() if not command_exists(tool)]
     for label, tool in optional.items():
@@ -223,26 +232,33 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
         ]
     )
 
-    run_command(
-        [
-            ctx["BCFTOOLS"],
-            "view",
-            "-v",
-            "snps",
-            "-m2",
-            "-M2",
-            ctx["VCF_GZ"],
-            "-Oz",
-            "-o",
-            ctx["CLEAN_VCF_GZ"],
-        ]
-    )
+    vcf_for_plink = ctx["CLEAN_VCF_GZ"]
+    if command_exists(ctx["BCFTOOLS"]):
+        run_command(
+            [
+                ctx["BCFTOOLS"],
+                "view",
+                "-v",
+                "snps",
+                "-m2",
+                "-M2",
+                ctx["VCF_GZ"],
+                "-Oz",
+                "-o",
+                ctx["CLEAN_VCF_GZ"],
+            ]
+        )
+    elif repo_path(ctx["CLEAN_VCF_GZ"]).exists():
+        print(f"Using existing cleaned VCF: {ctx['CLEAN_VCF_GZ']}")
+    else:
+        vcf_for_plink = ctx["VCF_GZ"]
+        print("bcftools not found; using VCF_GZ directly for PLINK import.")
 
     run_command(
         [
             ctx["PLINK2"],
             "--vcf",
-            ctx["CLEAN_VCF_GZ"],
+            vcf_for_plink,
             "--keep",
             ctx["KEEP_IDS_FILE"],
             "--chr-set",
@@ -287,6 +303,7 @@ def cmd_run_lr(ctx: dict[str, str]) -> None:
             ctx["PHENO_NAME"],
             "--glm",
             "hide-covar",
+            "allow-no-covars",
             "--out",
             ctx["LR_PREFIX"],
         ]
@@ -325,6 +342,10 @@ def cmd_run_lr(ctx: dict[str, str]) -> None:
 
 def cmd_run_lmm(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/lmm")
+    if not command_exists(ctx["GEMMA"]):
+        raise SystemExit(
+            "GEMMA not found. Set GEMMA=<path> in config/project.env.local or skip run-lmm."
+        )
 
     run_command(
         [
@@ -372,20 +393,23 @@ def cmd_run_lmm(ctx: dict[str, str]) -> None:
 
 def cmd_evaluate(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/plots")
-    run_command(
-        [
-            sys.executable,
-            "scripts/05_evaluate.py",
-            "--lr",
-            f"{ctx['LR_PREFIX']}.PHENO1.glm.linear",
-            "--lr-pcs",
-            f"{ctx['LR_PCS_PREFIX']}.PHENO1.glm.linear",
-            "--lmm",
-            ctx["LMM_OUT"],
-            "--out-prefix",
-            ctx["EVAL_OUT_PREFIX"],
-        ]
-    )
+    eval_cmd = [
+        sys.executable,
+        "scripts/05_evaluate.py",
+        "--lr",
+        f"{ctx['LR_PREFIX']}.PHENO1.glm.linear",
+        "--lr-pcs",
+        f"{ctx['LR_PCS_PREFIX']}.PHENO1.glm.linear",
+        "--out-prefix",
+        ctx["EVAL_OUT_PREFIX"],
+    ]
+
+    if repo_path(ctx["LMM_OUT"]).exists():
+        eval_cmd.extend(["--lmm", ctx["LMM_OUT"]])
+    else:
+        print(f"LMM file not found at {ctx['LMM_OUT']}; evaluating LR and LR+PCs only.")
+
+    run_command(eval_cmd)
 
 
 def cmd_simulate(ctx: dict[str, str]) -> None:
@@ -419,7 +443,10 @@ def cmd_all(ctx: dict[str, str]) -> None:
     cmd_check_tools(ctx)
     cmd_prepare_data(ctx)
     cmd_run_lr(ctx)
-    cmd_run_lmm(ctx)
+    if command_exists(ctx["GEMMA"]):
+        cmd_run_lmm(ctx)
+    else:
+        print("Skipping run-lmm: GEMMA not found.")
     cmd_evaluate(ctx)
 
 

@@ -79,7 +79,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--lr', required=True)
     ap.add_argument('--lr-pcs', required=True)
-    ap.add_argument('--lmm', required=True)
+    ap.add_argument('--lmm')
     ap.add_argument('--out-prefix', required=True)
     ap.add_argument('--top-n', type=int, default=100)
     args = ap.parse_args()
@@ -89,8 +89,11 @@ def main() -> None:
 
     lr = load_plink(Path(args.lr), 'LR')
     lrp = load_plink(Path(args.lr_pcs), 'LR+PCs')
-    lmm = load_gemma(Path(args.lmm), 'LMM')
-    all_df = pd.concat([lr, lrp, lmm], ignore_index=True)
+    dfs = [lr, lrp]
+    if args.lmm:
+        lmm = load_gemma(Path(args.lmm), 'LMM')
+        dfs.append(lmm)
+    all_df = pd.concat(dfs, ignore_index=True)
 
     qq_plot(all_df, out_prefix.with_suffix('.qq.png'))
     manhattan_plot(all_df, out_prefix.with_suffix('.manhattan.png'))
