@@ -196,6 +196,7 @@ def context_from_config(cfg: dict[str, str]) -> dict[str, str]:
     ctx.setdefault("PLINK2", "plink2")
     ctx.setdefault("GEMMA", "gemma")
     ctx.setdefault("GCTA", "gcta64")
+    ctx.setdefault("NEW_ID_MAX_ALLELE_LEN", "40")
 
     ctx.setdefault("LR_PREFIX", f"{ctx['RESULTS_DIR']}/lr/{run_label}_lr")
     ctx.setdefault("PCA_PREFIX", f"{ctx['RESULTS_DIR']}/lr_pcs/{run_label}_pca")
@@ -302,6 +303,8 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
             "--chr-set",
             "5",
             "--allow-extra-chr",
+            "--new-id-max-allele-len",
+            ctx["NEW_ID_MAX_ALLELE_LEN"],
             "--set-all-var-ids",
             "@:#:$r:$a",
             "--make-pgen",

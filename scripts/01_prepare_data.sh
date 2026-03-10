@@ -18,6 +18,7 @@ PHENO_SAMPLES_FILE=${PHENO_SAMPLES_FILE:-"$PROC_DIR/${RUN_LABEL}.samples.tsv"}
 PFILE_PREFIX=${PFILE_PREFIX:-"$PROC_DIR/chr${CHR}.${RUN_LABEL}"}
 BFILE_PREFIX=${BFILE_PREFIX:-"$PROC_DIR/chr${CHR}.${RUN_LABEL}.qc"}
 CLEAN_VCF_GZ=${CLEAN_VCF_GZ:-"$RAW_DIR/1001G.Chr${CHR}_clean.vcf.gz"}
+NEW_ID_MAX_ALLELE_LEN=${NEW_ID_MAX_ALLELE_LEN:-40}
 
 echo "[1/3] Building phenotype and keep files for subset '$RUN_LABEL'"
 python scripts/00_build_subset_inputs.py \
@@ -44,6 +45,7 @@ echo "[3/3] Converting VCF to PLINK and applying QC"
   --keep "$KEEP_IDS_FILE" \
   --chr-set 5 \
   --allow-extra-chr \
+  --new-id-max-allele-len "$NEW_ID_MAX_ALLELE_LEN" \
   --set-all-var-ids @:#:\$r:\$a \
   --make-pgen \
   --out "$PFILE_PREFIX"
