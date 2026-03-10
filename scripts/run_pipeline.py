@@ -87,6 +87,33 @@ def ensure_dir(path_str: str) -> None:
     repo_path(path_str).mkdir(parents=True, exist_ok=True)
 
 
+def ensure_file(path_str: str, hint: str | None = None) -> None:
+    path = repo_path(path_str)
+    if path.exists():
+        return
+
+    msg = f"Required file not found: {path_str}"
+    if hint:
+        msg = f"{msg}. {hint}"
+    raise SystemExit(msg)
+
+
+def ensure_bfile(prefix: str, hint: str | None = None) -> None:
+    missing = []
+    for ext in (".bed", ".bim", ".fam"):
+        path = repo_path(f"{prefix}{ext}")
+        if not path.exists():
+            missing.append(path)
+
+    if not missing:
+        return
+
+    msg = f"Required PLINK bfile not found for prefix '{prefix}'"
+    if hint:
+        msg = f"{msg}. {hint}"
+    raise SystemExit(msg)
+
+
 def run_command(args: list[str]) -> None:
     print(">", " ".join(args))
     try:
@@ -210,6 +237,10 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
     ensure_dir(ctx["RAW_DIR"])
     ensure_dir(ctx["PROC_DIR"])
     ensure_dir(ctx["RESULTS_DIR"])
+    ensure_file(
+        ctx["VCF_GZ"],
+        "Set VCF_GZ in config/project.env.local or place the VCF at this path.",
+    )
 
     run_command(
         [
@@ -291,6 +322,7 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
 def cmd_run_lr(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/lr")
     ensure_dir(f"{ctx['RESULTS_DIR']}/lr_pcs")
+    ensure_bfile(ctx["BFILE_PREFIX"], "Run 'prepare-data' first.")
 
     run_command(
         [
@@ -342,6 +374,7 @@ def cmd_run_lr(ctx: dict[str, str]) -> None:
 
 def cmd_run_lmm(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/lmm")
+    ensure_bfile(ctx["BFILE_PREFIX"], "Run 'prepare-data' first.")
     if not command_exists(ctx["GEMMA"]):
         raise SystemExit(
             "GEMMA not found. Set GEMMA=<path> in config/project.env.local or skip run-lmm."
@@ -393,6 +426,14 @@ def cmd_run_lmm(ctx: dict[str, str]) -> None:
 
 def cmd_evaluate(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/plots")
+    ensure_file(
+        f"{ctx['LR_PREFIX']}.PHENO1.glm.linear",
+        "Run 'run-lr' first.",
+    )
+    ensure_file(
+        f"{ctx['LR_PCS_PREFIX']}.PHENO1.glm.linear",
+        "Run 'run-lr' first.",
+    )
     eval_cmd = [
         sys.executable,
         "scripts/05_evaluate.py",
@@ -414,6 +455,7 @@ def cmd_evaluate(ctx: dict[str, str]) -> None:
 
 def cmd_simulate(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/sim")
+    ensure_bfile(ctx["BFILE_PREFIX"], "Run 'prepare-data' first.")
 
     if not command_exists(ctx["GCTA"]):
         raise SystemExit(f"Optional dependency not found: gcta64 ({ctx['GCTA']})")
