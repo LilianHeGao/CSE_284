@@ -9,17 +9,24 @@ from scipy.stats import chi2
 
 
 def load_plink(path: Path, label: str) -> pd.DataFrame:
-    df = pd.read_csv(path, sep='\t', comment='#')
-    if 'P' not in df.columns:
-        raise ValueError(f'{label}: expected PLINK2 column P')
+    df = pd.read_csv(path, sep='\t')
+
+    p_col = None
+    for candidate in ('P', 'p', 'PVAL', 'P_VALUE'):
+        if candidate in df.columns:
+            p_col = candidate
+            break
+    if p_col is None:
+        raise ValueError(f'{label}: expected a PLINK2 p-value column, got {list(df.columns)}')
+
     out = pd.DataFrame({
         'method': label,
         'chr': df['#CHROM'] if '#CHROM' in df.columns else df['CHROM'],
-        'pos': df['POS'],
+        'pos': pd.to_numeric(df['POS'], errors='coerce'),
         'snp': df['ID'],
-        'p': df['P'],
+        'p': pd.to_numeric(df[p_col], errors='coerce'),
     })
-    return out.dropna(subset=['p'])
+    return out.dropna(subset=['p', 'pos'])
 
 
 def load_gemma(path: Path, label: str) -> pd.DataFrame:
