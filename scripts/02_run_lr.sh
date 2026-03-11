@@ -14,6 +14,7 @@ RUN_LABEL=${RUN_LABEL:-${SUBSET_NAME:-all}}
 BFILE=${BFILE_PREFIX:-"$PROC_DIR/chr${CHR}.${RUN_LABEL}.qc"}
 LR_PREFIX="$RESULTS_DIR/lr/${RUN_LABEL}_lr"
 PCA_PREFIX="$RESULTS_DIR/lr_pcs/${RUN_LABEL}_pca"
+PCA_FREQ_PREFIX="$RESULTS_DIR/lr_pcs/${RUN_LABEL}_pca_freq"
 LR_PCS_PREFIX="$RESULTS_DIR/lr_pcs/${RUN_LABEL}_lr_pcs"
 
 echo "[1/3] Naive LR GWAS (no structure correction)"
@@ -27,7 +28,13 @@ echo "[1/3] Naive LR GWAS (no structure correction)"
 echo "[2/3] PCA for LR+PC covariates"
 "$PLINK2" \
   --bfile "$BFILE" \
+  --freq \
+  --out "$PCA_FREQ_PREFIX"
+
+"$PLINK2" \
+  --bfile "$BFILE" \
   --pca "$NUM_PCS" \
+  --read-freq "$PCA_FREQ_PREFIX.afreq" \
   --out "$PCA_PREFIX"
 
 echo "[3/3] LR+PC GWAS"

@@ -37,8 +37,8 @@ bash scripts/01_prepare_data.sh config/project.env
 bash scripts/02_run_lr.sh config/project.env
 bash scripts/03_run_lmm_gemma.sh config/project.env
 python scripts/05_evaluate.py \
-  --lr results/lr/lr.PHENO1.glm.linear \
-  --lr-pcs results/lr_pcs/lr_pcs.PHENO1.glm.linear \
+  --lr results/lr/lr.PHENO.glm.linear \
+  --lr-pcs results/lr_pcs/lr_pcs.PHENO.glm.linear \
   --lmm results/lmm/lmm.assoc.txt \
   --out-prefix results/plots/benchmark
 ```

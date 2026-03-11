@@ -201,6 +201,7 @@ def context_from_config(cfg: dict[str, str]) -> dict[str, str]:
 
     ctx.setdefault("LR_PREFIX", f"{ctx['RESULTS_DIR']}/lr/{run_label}_lr")
     ctx.setdefault("PCA_PREFIX", f"{ctx['RESULTS_DIR']}/lr_pcs/{run_label}_pca")
+    ctx.setdefault("PCA_FREQ_PREFIX", f"{ctx['RESULTS_DIR']}/lr_pcs/{run_label}_pca_freq")
     ctx.setdefault("LR_PCS_PREFIX", f"{ctx['RESULTS_DIR']}/lr_pcs/{run_label}_lr_pcs")
     ctx.setdefault("LMM_PCA_PREFIX", f"{ctx['RESULTS_DIR']}/lmm/{run_label}_pca")
     ctx.setdefault("LMM_COVARS", f"{ctx['RESULTS_DIR']}/lmm/{run_label}_lmm_covars.txt")
@@ -360,8 +361,21 @@ def cmd_run_lr(ctx: dict[str, str]) -> None:
             ctx["PLINK2"],
             "--bfile",
             ctx["BFILE_PREFIX"],
+            "--freq",
+            "--out",
+            ctx["PCA_FREQ_PREFIX"],
+        ]
+    )
+
+    run_command(
+        [
+            ctx["PLINK2"],
+            "--bfile",
+            ctx["BFILE_PREFIX"],
             "--pca",
             ctx["NUM_PCS"],
+            "--read-freq",
+            f"{ctx['PCA_FREQ_PREFIX']}.afreq",
             "--out",
             ctx["PCA_PREFIX"],
         ]
@@ -440,21 +454,23 @@ def cmd_run_lmm(ctx: dict[str, str]) -> None:
 
 def cmd_evaluate(ctx: dict[str, str]) -> None:
     ensure_dir(f"{ctx['RESULTS_DIR']}/plots")
+    lr_result = f"{ctx['LR_PREFIX']}.{ctx['PHENO_NAME']}.glm.linear"
+    lrp_result = f"{ctx['LR_PCS_PREFIX']}.{ctx['PHENO_NAME']}.glm.linear"
     ensure_file(
-        f"{ctx['LR_PREFIX']}.PHENO1.glm.linear",
+        lr_result,
         "Run 'run-lr' first.",
     )
     ensure_file(
-        f"{ctx['LR_PCS_PREFIX']}.PHENO1.glm.linear",
+        lrp_result,
         "Run 'run-lr' first.",
     )
     eval_cmd = [
         sys.executable,
         "scripts/05_evaluate.py",
         "--lr",
-        f"{ctx['LR_PREFIX']}.PHENO1.glm.linear",
+        lr_result,
         "--lr-pcs",
-        f"{ctx['LR_PCS_PREFIX']}.PHENO1.glm.linear",
+        lrp_result,
         "--out-prefix",
         ctx["EVAL_OUT_PREFIX"],
     ]
