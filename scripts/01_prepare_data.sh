@@ -43,6 +43,7 @@ echo "[3/3] Converting VCF to PLINK and applying QC"
 "$PLINK2" \
   --vcf "$VCF_FOR_PLINK" \
   --keep "$KEEP_IDS_FILE" \
+  --double-id \
   --chr-set 5 \
   --allow-extra-chr \
   --new-id-max-allele-len "$NEW_ID_MAX_ALLELE_LEN" \

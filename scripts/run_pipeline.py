@@ -300,6 +300,7 @@ def cmd_prepare_data(ctx: dict[str, str]) -> None:
             vcf_for_plink,
             "--keep",
             ctx["KEEP_IDS_FILE"],
+            "--double-id",
             "--chr-set",
             "5",
             "--allow-extra-chr",
