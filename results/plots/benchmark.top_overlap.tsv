@@ -1,0 +1,4 @@
+method_a	method_b	top_n	overlap
+LMM	LR	100	30
+LMM	LR+PCs	100	49
+LR	LR+PCs	100	32
