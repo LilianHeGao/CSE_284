@@ -1,7 +1,7 @@
 # Benchmarking GWAS Models on *Arabidopsis thaliana* Chromosome 4
 
 ## Group Members
-Lilian Gao, Junxi Feng
+Junxi Feng, He Gao, Ningxin Kang
 
 ## 1. Introduction
 Our project asks a focused methods question: how much does population-structure correction change GWAS behavior on a structured *Arabidopsis thaliana* panel? We benchmarked three approaches on the same chromosome 4 genotype set: naive linear regression (LR), linear regression with genotype principal components (LR+PCs), and a kinship-based linear mixed model (LMM).
